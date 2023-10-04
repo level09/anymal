@@ -1,0 +1,23 @@
+# Python related
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.log
+
+# Environment variables
+.env
+
+# IDE related
+.idea/
+
+# Database
+*.db
+
+# OS related
+.DS_Store
+
+# Virtual environment
+venv/
+
