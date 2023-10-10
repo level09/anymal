@@ -22,8 +22,11 @@ class Settings(BaseSettings):
     secret_key: SecretStr
     hashing_algorithm: str = "HS256"
     access_token_expire_days: int = 7
+
+    secure_cookies: bool = True
     google_oauth_client_id: str
     google_oauth_client_secret: str
+
 
     class Config:
         env_file = '.env'

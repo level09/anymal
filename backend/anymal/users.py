@@ -5,14 +5,14 @@ from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import (
     AuthenticationBackend,
-    BearerTransport,
-    JWTStrategy,
+    CookieTransport,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
 from httpx_oauth.clients.google import GoogleOAuth2
 
 from .config import settings, logger
-from .db import User, get_user_db
+from .db import User, get_user_db, AccessToken, get_access_token_db
 
 SECRET = settings.secret_key  # Utilizing secrets securely
 
@@ -45,17 +45,21 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
     yield UserManager(user_db)
 
 
-bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+cookie_transport = CookieTransport(
+    cookie_secure=settings.secure_cookies,
+)
 
 
-def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+def get_database_strategy(
+    access_token_db: AccessTokenDatabase[AccessToken] = Depends(get_access_token_db),
+) -> DatabaseStrategy:
+    return DatabaseStrategy(access_token_db, lifetime_seconds=3600)
 
 
 auth_backend = AuthenticationBackend(
     name="jwt",
-    transport=bearer_transport,
-    get_strategy=get_jwt_strategy,
+    transport=cookie_transport,
+    get_strategy=get_database_strategy,
 )
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
