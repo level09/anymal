@@ -1,0 +1,31 @@
+# OS-related
+.DS_Store
+
+# Dependencies directory
+node_modules
+
+# Build output
+/dist
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors and IDEs related
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Lock files (if you decide to ignore them)
+# package-lock.json

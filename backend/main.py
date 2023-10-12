@@ -11,21 +11,25 @@ from anymal.users import auth_backend, fastapi_users, current_active_user, googl
 app = FastAPI()
 
 # Add CORS middleware with more restrictive origins for production
-ALLOWED_ORIGINS = ["*"]  # For dev, allow all origins; for prod, list your frontend domains.
+ALLOWED_ORIGINS = ["http://localhost:3000",  # Vue app
+                   "http://localhost:8000"  # FastAPI app
+                   ]
 if settings.environment == 'production':  # Assuming you have a 'debug' field in your Settings class
     ALLOWED_ORIGINS = ["https://anymal.io"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,  # List of origins (you might want to restrict this in production)
-    allow_credentials=True,
+    allow_credentials=True,  # Allow cookies
     allow_methods=["*"],  # List of allowed methods
     allow_headers=["*"],  # List of allowed headers
 )
 
+
 @app.get('/')
 def index():
     return {'Welcome to Anymal Framework 💀'}
+
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
@@ -58,8 +62,8 @@ app.include_router(
 )
 
 
-@app.get("/authenticated-route")
-async def authenticated_route(user: User = Depends(current_active_user)):
+@app.get("/check-session")
+async def cehck_session(user: User = Depends(current_active_user)):
     return {"message": f"Hello {user.email}!"}
 
 

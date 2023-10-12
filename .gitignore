@@ -1,23 +1,25 @@
-# Python related
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.db
-*.log
-
-# Environment variables
-.env
-
-# IDE related
+# JetBrains IDE
 .idea/
 
-# Database
-*.db
-
-# OS related
+# macOS generated files
 .DS_Store
 
-# Virtual environment
-venv/
+# Compiled Python files
+*.pyc
+__pycache__/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Archives and packages
+*.zip
+*.tar.gz
+*.jar
+
+# macOS directories
+.DocumentRevisions-V100
+.Trashes
 
