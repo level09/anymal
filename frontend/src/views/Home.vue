@@ -17,8 +17,8 @@
       <v-container class="text-center" fluid>
         <v-row>
           <v-col>
-            <v-btn large class="mx-3" href="/login">Login</v-btn>
-            <v-btn large class="mx-3" href="/signup" color="primary">Sign Up</v-btn>
+            <v-btn v-if="!auth.user" large class="mx-3" href="/login">Login</v-btn>
+            <v-btn v-if="!auth.user"  large class="mx-3" href="/signup" color="primary">Sign Up</v-btn>
             <v-btn large class="mx-3" href="/dashboard" color="orange">Dashbaord</v-btn>
           </v-col>
         </v-row>
@@ -42,9 +42,11 @@
   </v-app>
 </template>
 
-<script>
-export default {
-  // No data() function since all values are hardcoded in the markup
-}
+<script setup>
+  import {useAuthStore} from "@/store/auth";
+
+  const auth = useAuthStore();
+
+
 </script>
 

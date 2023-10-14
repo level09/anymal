@@ -10,7 +10,7 @@
     <v-spacer></v-spacer>
 
     <!-- Logout Button -->
-    <v-btn icon @click="logout">
+    <v-btn v-if="auth.user" icon @click="logout">
       <v-icon>mdi-logout</v-icon>
     </v-btn>
   </v-app-bar>
@@ -18,6 +18,8 @@
 
 <script setup>
 import router from "@/router";
+import {useAuthStore} from "@/store/auth";
+const auth = useAuthStore();
 const logout = () => {
   router.push({ name: 'Logout' }); // navigate to logout route
 };
