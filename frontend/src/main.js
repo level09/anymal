@@ -15,3 +15,6 @@ const app = createApp(App);
 
 registerPlugins(app)
 app.mount('#app')
+
+// debug
+window.app = app;

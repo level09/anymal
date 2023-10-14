@@ -61,12 +61,6 @@ app.include_router(
     tags=["auth"],
 )
 
-
-@app.get("/check-session")
-async def cehck_session(user: User = Depends(current_active_user)):
-    return {"message": f"Hello {user.email}!"}
-
-
 @app.on_event("startup")
 async def on_startup():
     # Not needed if you setup a migration system like Alembic

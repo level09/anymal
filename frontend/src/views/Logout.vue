@@ -7,9 +7,11 @@
 <script setup>
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/api'; // ensure path to API module is correct
+import { useAuthStore } from "@/store/auth";
+import api from "@/plugins/api";
 
 const router = useRouter();
+const auth = useAuthStore();
 
 onMounted(async () => {
   try {
@@ -17,8 +19,9 @@ onMounted(async () => {
     console.log('Logged out successfully');
   } catch (error) {
     console.error('Error during logout:', error);
-    // Handle error, e.g., through user notification or additional logging
   } finally {
+    // Update the local state to reflect that the user is logged out.
+    auth.setAuthenticated(false);
     // Redirect to home regardless of logout success
     router.push({ name: 'Home' });
   }
