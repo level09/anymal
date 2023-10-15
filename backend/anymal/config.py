@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     google_oauth_client_id: str
     google_oauth_client_secret: str
 
-
+    frontend_base_url: str = 'http://localhost:3000'
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'

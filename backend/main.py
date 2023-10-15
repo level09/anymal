@@ -67,9 +67,10 @@ async def on_startup():
     await create_db_and_tables()
 
 
-async def init_db():
-    # Your DB initialization logic here
-    await create_db_and_tables()
-
-
-app.add_event_handler("startup", init_db)
+# @app.get("/auth/google/callback")
+# async def google_oauth_callback(user: BaseUser = Depends(users.get_current_user)):
+#     # Set a cookie on the user's browser to indicate that they are authenticated.
+#     users.set_current_user(user)
+#
+#     # Redirect the user to the page that they were originally trying to access.
+#     return Redirect("/")

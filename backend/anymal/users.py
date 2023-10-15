@@ -2,7 +2,9 @@ import uuid
 from typing import Optional
 
 from fastapi import Depends, Request
-from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
+from fastapi.responses import RedirectResponse
+
+from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, models
 from fastapi_users.authentication import (
     AuthenticationBackend,
     CookieTransport,
@@ -10,6 +12,7 @@ from fastapi_users.authentication import (
 from fastapi_users.db import SQLAlchemyUserDatabase
 from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
 from httpx_oauth.clients.google import GoogleOAuth2
+from starlette.responses import Response
 
 from .config import settings, logger
 from .db import User, get_user_db, AccessToken, get_access_token_db
@@ -26,6 +29,14 @@ google_oauth_client = GoogleOAuth2(
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
+
+    async  def on_after_login(
+        self,
+        user: models.UP,
+        request: Optional[Request] = None,
+        response: Optional[Response] = None,
+    ) -> None:
+        RedirectResponse('/')
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         logger.info(f"User {user.id} has registered.")
@@ -45,7 +56,18 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
     yield UserManager(user_db)
 
 
-cookie_transport = CookieTransport(
+class CookieRedirectTransport(CookieTransport):
+    """Custom cookie transport thar redirects the user after a succesful login."""
+
+    async def get_login_response(self, token: str) -> Response:
+        """Redirect the user on successful login."""
+        response = RedirectResponse(settings.frontend_base_url + '/dashboard')
+        return self._set_login_cookie(response, token)
+
+
+
+
+cookie_transport = CookieRedirectTransport(
     cookie_secure=settings.secure_cookies,
 )
 
