@@ -43,27 +43,30 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore();
 
-  // Optionally: Check the user's authentication status if it's not known.
   if (!auth.isAuthenticated) {
     await auth.checkAuthentication();
   }
 
-  console.log('Routing from', from.fullPath, 'to', to.fullPath);
+  console.log('Routing from', from.fullPath, 'to', to.fullPath, 'isAuthenticated:', auth.isAuthenticated);
 
-  if (to.meta.isPublic) {
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    // If route requires auth and user is not authenticated, redirect to login
+    console.log('Unauthenticated user navigating to protected route - redirecting to Login');
+    next({name: 'Login'});
+  } else if (to.meta.isPublic) {
     // If user is authenticated and tries to visit a public page (like Login), redirect to Dashboard.
     if (auth.isAuthenticated && to.name === 'Login') {
+      console.log('Authenticated user navigating to Login - redirecting to Dashboard');
       next({name: 'Dashboard'});
     } else {
+      console.log('Public route - allowing navigation');
       next();
     }
-
-  } else if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    // If route requires auth and user is not authenticated, redirect to login
-    next({name: 'Login'});
   } else {
+    console.log('Allowing navigation');
     next();
   }
 });
+
 
 export default router;

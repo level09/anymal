@@ -86,7 +86,7 @@ const login = async () => {
 const loginWithGoogle = async () => {
   loading.value = true;
   try {
-    const response = await this.$axios.get('/auth/google/authorize');
+    const response = await api.get('/auth/google/authorize');
     window.location.href = response.data.authorization_url;
   } catch (error) {
     console.error('Google login initiation failed:', error);
