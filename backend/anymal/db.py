@@ -1,7 +1,7 @@
 from typing import AsyncGenerator, List
 
 from fastapi import Depends
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase, SQLAlchemyBaseOAuthAccountTableUUID
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase, SQLAlchemyBaseAccessTokenTableUUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
@@ -16,18 +16,20 @@ class Base(DeclarativeBase):
     """Base class for SQLAlchemy models."""
     pass
 
+class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
+    pass
+
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
     """User model inheriting from FastAPI users base User model."""
-    pass
+    oauth_accounts: Mapped[List[OAuthAccount]] = relationship(
+        "OAuthAccount", lazy="joined"
+    )
+
 
 class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):
     """Model representing access tokens with UUID as primary key."""
     pass
-
-
-
-
 
 async def create_db_and_tables():
     """
@@ -50,14 +52,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    """
-    Provide a user database instance.
-    Args:
-        session (AsyncSession): An asynchronous session with the database.
-    Yields:
-        SQLAlchemyUserDatabase: An instance interfacing the user database.
-    """
-    yield SQLAlchemyUserDatabase(session, User)
+    yield SQLAlchemyUserDatabase(session, User, OAuthAccount)
 
 
 async def get_access_token_db(session: AsyncSession = Depends(get_async_session)):
@@ -69,3 +64,5 @@ async def get_access_token_db(session: AsyncSession = Depends(get_async_session)
         SQLAlchemyAccessTokenDatabase: An instance interfacing the access token database.
     """
     yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
+
+
