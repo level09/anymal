@@ -5,32 +5,15 @@ const routes = [
   {
     path: '/',
     component: () => import('@/layouts/default/Default.vue'),
-    meta: {isPublic: true},
     children: [
-      {path: '', name: 'Home', component: () => import('@/views/Home.vue')},
-      {
-        path: 'dashboard',
-        name: 'Dashboard',
-        component: () => import('@/views/Dashboard.vue'),
-        meta: {requiresAuth: true}
-      },
-      {
-        path: 'logout', name: 'Logout',
-        component: () => import('@/views/Logout.vue'),
-        meta: {requiresAuth: true}
-      },
-      {
-        path: 'login',
-        name: 'Login',
-        component: () => import('@/views/Login.vue'),
-        meta: {isPublic: true}
-      },
-      {
-        path: '/auth/callback',
-        name: 'AuthCallback',
-        component: () => import('@/views/AuthCallback.vue'),
-        meta: {isPublic: true}
-      }
+      {path: '', name: 'Home', component: () => import('@/views/Home.vue'), meta: {requiresAuth: false}},
+      {path: 'dashboard', name: 'Dashboard', component: () => import('@/views/Dashboard.vue'), meta: {requiresAuth: true}},
+      {path: 'register', name: 'Register', component: () => import('@/views/Register.vue'), meta: {requiresAuth: false}},
+      {path: 'logout', name: 'Logout', component: () => import('@/views/Logout.vue'), meta: {requiresAuth: true}},
+      {path: 'login', name: 'Login', component: () => import('@/views/Login.vue'), meta: {requiresAuth: false}},
+      {path: 'auth/google/callback', name: 'googleAuthCallback', component: () => import('@/views/AuthCallback.vue'), meta: {requiresAuth: false}},
+      {path: 'success', name: 'Success', component: () => import('@/views/Success.vue'), meta: {requiresAuth: true}},
+      {path: 'cancelled', name: 'Cancelled', component: () => import('@/views/Cancelled.vue'), meta: {requiresAuth: true}},
     ],
   },
 ]
@@ -53,7 +36,7 @@ router.beforeEach(async (to, from, next) => {
     // If route requires auth and user is not authenticated, redirect to login
     console.log('Unauthenticated user navigating to protected route - redirecting to Login');
     next({name: 'Login'});
-  } else if (to.meta.isPublic) {
+  } else if (!to.meta.requiresAuth) {
     // If user is authenticated and tries to visit a public page (like Login), redirect to Dashboard.
     if (auth.isAuthenticated && to.name === 'Login') {
       console.log('Authenticated user navigating to Login - redirecting to Dashboard');

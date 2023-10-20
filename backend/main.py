@@ -1,11 +1,12 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from anymal.config import settings
-from anymal.db import create_db_and_tables, User
+from anymal.db import create_db_and_tables
 from anymal.schemas.user import UserRead, UserCreate, UserUpdate
-from anymal.users import auth_backend, fastapi_users, current_active_user, google_oauth_client
-
+from anymal.users import auth_backend, fastapi_users, google_oauth_client
+from anymal.websocket_manager import connect, disconnect, broadcast
+from anymal import stripe_integration
 # from anymal.routers import user  # Uncomment when you want to use the user router
 
 app = FastAPI()
@@ -56,10 +57,20 @@ app.include_router(
 )
 
 app.include_router(
-    fastapi_users.get_oauth_router(google_oauth_client, auth_backend, str(settings.secret_key)),
+    fastapi_users.get_oauth_router(google_oauth_client,
+
+                                   auth_backend,
+                                   str(settings.secret_key),
+                                   redirect_url=f'{settings.frontend_base_url}/auth/google/callback'
+                                   ),
     prefix="/auth/google",
+
     tags=["auth"],
 )
+
+
+# Stripe
+app.include_router(stripe_integration.router, prefix="/stripe", tags=["stripe"])
 
 @app.on_event("startup")
 async def on_startup():
@@ -67,10 +78,24 @@ async def on_startup():
     await create_db_and_tables()
 
 
-# @app.get("/auth/google/callback")
-# async def google_oauth_callback(user: BaseUser = Depends(users.get_current_user)):
-#     # Set a cookie on the user's browser to indicate that they are authenticated.
-#     users.set_current_user(user)
-#
-#     # Redirect the user to the page that they were originally trying to access.
-#     return Redirect("/")
+@app.post("/send_message")
+async def send_message_endpoint(message: str):
+    await broadcast(message)
+    return {"message": "Message sent"}
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    # Accept the WebSocket connection
+    await connect(websocket)
+    try:
+        while True:
+            # Wait for a message from the client
+            data = await websocket.receive_text()
+
+            # Send a message back to the client
+            await broadcast(f"Message text was: {data}")
+
+    except WebSocketDisconnect:
+        disconnect(websocket)
+        await broadcast("Client left the chat")

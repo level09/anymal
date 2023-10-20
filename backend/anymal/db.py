@@ -5,6 +5,7 @@ from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase, SQLAlchemyBaseAccessTokenTableUUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
+from sqlalchemy import Column, String
 from .config import settings
 
 DATABASE_URL = settings.db_url
@@ -23,8 +24,14 @@ class OAuthAccount(SQLAlchemyBaseOAuthAccountTableUUID, Base):
 class User(SQLAlchemyBaseUserTableUUID, Base):
     """User model inheriting from FastAPI users base User model."""
     oauth_accounts: Mapped[List[OAuthAccount]] = relationship(
-        "OAuthAccount", lazy="joined"
+        "OAuthAccount", lazy="select"
     )
+    stripe_customer_id = Column(String, unique=True, nullable=True)
+    subscription_status = Column(String, nullable=True)
+    stripe_subscription_id = Column(String, unique=True, nullable=True)
+    card_last4 = Column(String(length=4), nullable=True)
+    card_brand = Column(String, nullable=True)
+
 
 
 class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):

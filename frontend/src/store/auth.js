@@ -28,7 +28,7 @@ export const useAuthStore = defineStore({
           this.setUser(null); // Clear user data if not authenticated
         }
       } catch (error) {
-        console.error("Error checking authentication status:", error);
+        //console.error("Error checking authentication status:", error);
         this.setAuthenticated(false);
         this.setUser(null); // Clear user data if an error occurs
       }

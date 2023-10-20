@@ -50,50 +50,73 @@
   </v-container>
 </template>
 
-<script setup>
-import {ref} from 'vue';
+<script>
 import router from "@/router";
 import api from "@/plugins/api";
-const email = ref('');
-const password = ref('');
-const loading = ref(false);
 
-const login = async () => {
-  loading.value = true;
-  try {
-    const response = await api.post(
-      '/auth/jwt/login',
-      {
-        username: email.value,
-        password: password.value
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
+export default {
+  data() {
+    return {
+      email: '',
+      password: '',
+      loading: false
+    };
+  },
+
+  created() {
+    // Add an event listener to the websocket
+    this.$websocket.addEventListener('message', this.handleWebsocketMessage);
+  },
+
+  beforeDestroy() {
+    // Clean up the event listener when the component is destroyed
+    this.$websocket.removeEventListener('message', this.handleWebsocketMessage);
+  },
+
+
+  methods: {
+    handleWebsocketMessage(event) {
+      console.log('Received WebSocket message:', event.data);
+    },
+
+    async login() {
+      this.loading = true;
+      try {
+        const response = await api.post(
+          '/auth/jwt/login',
+          {
+            username: this.email,
+            password: this.password
+          }, {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }
+        );
+
+        console.log('Login successful');
+        router.push('/dashboard');
+      } catch (error) {
+
+
+        console.error('Login failed:', error);
+      } finally {
+        this.loading = false;
       }
-    );
-
-
-    console.log('Login successful');
-    router.push('/dashboard');
-  } catch (error) {
-    console.error('Login failed:', error);
-  } finally {
-    loading.value = false;
+    },
+    async loginWithGoogle() {
+      this.loading = true;
+      try {
+        const response = await api.get('/auth/google/authorize');
+        //console.log(response)
+        window.location.href = response.data.authorization_url;
+      } catch (error) {
+        console.error('Google login initiation failed:', error);
+      } finally {
+        this.loading = false;
+      }
+    }
   }
 };
-
-const loginWithGoogle = async () => {
-  loading.value = true;
-  try {
-    const response = await api.get('/auth/google/authorize');
-    window.location.href = response.data.authorization_url;
-  } catch (error) {
-    console.error('Google login initiation failed:', error);
-  } finally {
-    loading.value = false;
-  }
-};
-
 </script>
 

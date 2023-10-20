@@ -1,16 +1,15 @@
 import uuid
 from typing import Optional
-
-from fastapi import Depends, Request
+import jwt
+from fastapi import Depends, Request, status
 from fastapi.responses import RedirectResponse
-
-from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin, models
+from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.authentication import (
     AuthenticationBackend,
     CookieTransport,
 )
-from fastapi_users.db import SQLAlchemyUserDatabase
 from fastapi_users.authentication.strategy.db import AccessTokenDatabase, DatabaseStrategy
+from fastapi_users.db import SQLAlchemyUserDatabase
 from httpx_oauth.clients.google import GoogleOAuth2
 from starlette.responses import Response
 
@@ -30,13 +29,14 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
-    async  def on_after_login(
-        self,
-        user: models.UP,
-        request: Optional[Request] = None,
-        response: Optional[Response] = None,
+    async def on_after_login(
+            self,
+            user: User,
+            request: Optional[Request] = None,
+            response: Optional[Response] = None,
     ) -> None:
-        RedirectResponse('/')
+
+        logger.info(f"User {user.id} has logged in.")
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         logger.info(f"User {user.id} has registered.")
@@ -57,23 +57,24 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
 
 
 class CookieRedirectTransport(CookieTransport):
-    """Custom cookie transport thar redirects the user after a succesful login."""
+    """Custom cookie transport thar redirects the user after a successful login."""
 
     async def get_login_response(self, token: str) -> Response:
         """Redirect the user on successful login."""
-        response = RedirectResponse(settings.frontend_base_url + '/dashboard')
+
+        # response = Response(settings.frontend_base_url + '/dashboard')
+        response = Response(status_code=status.HTTP_204_NO_CONTENT)
+        # response.headers['redirect'] = 1
         return self._set_login_cookie(response, token)
 
 
-
-
-cookie_transport = CookieRedirectTransport(
+cookie_transport = CookieTransport(cookie_name='anymal',
     cookie_secure=settings.secure_cookies,
 )
 
 
 def get_database_strategy(
-    access_token_db: AccessTokenDatabase[AccessToken] = Depends(get_access_token_db),
+        access_token_db: AccessTokenDatabase[AccessToken] = Depends(get_access_token_db),
 ) -> DatabaseStrategy:
     return DatabaseStrategy(access_token_db, lifetime_seconds=3600)
 
