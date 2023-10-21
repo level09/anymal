@@ -1,12 +1,14 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, WebSocketException
 from fastapi.middleware.cors import CORSMiddleware
 
-from anymal.config import settings
-from anymal.db import create_db_and_tables
-from anymal.schemas.user import UserRead, UserCreate, UserUpdate
-from anymal.users import auth_backend, fastapi_users, google_oauth_client
-from anymal.websocket_manager import connect, disconnect, broadcast
 from anymal import stripe_integration
+from anymal.config import settings
+from anymal.db import create_db_and_tables, User
+from anymal.schemas.user import UserRead, UserCreate, UserUpdate
+from anymal.users import auth_backend, UserManager, get_user_manager
+from anymal.users import fastapi_users, google_oauth_client, AccessTokenDatabase, AccessToken, get_database_strategy, get_access_token_db
+from anymal.websocket_manager import connect, disconnect, broadcast
+
 # from anymal.routers import user  # Uncomment when you want to use the user router
 
 app = FastAPI()
@@ -68,9 +70,9 @@ app.include_router(
     tags=["auth"],
 )
 
-
 # Stripe
 app.include_router(stripe_integration.router, prefix="/stripe", tags=["stripe"])
+
 
 @app.on_event("startup")
 async def on_startup():
@@ -84,10 +86,30 @@ async def send_message_endpoint(message: str):
     return {"message": "Message sent"}
 
 
+async def get_user_from_cookie(
+        websocket: WebSocket,
+        user_manager: UserManager = Depends(get_user_manager),
+        access_token_db: AccessTokenDatabase[AccessToken] = Depends(get_access_token_db)
+):
+    # Extract the JWT token directly from the WebSocket's cookies
+    cookie = websocket.cookies.get(settings.auth_cookie_name)
+
+    if not cookie:
+        raise WebSocketException("Authentication cookie not found")
+
+    # Decode and verify the JWT token using the auth_backend
+    # Get the strategy using the access_token_db
+    strategy = get_database_strategy(access_token_db)
+
+    user = await strategy.read_token(cookie, user_manager)
+    if not user or not user.is_active:
+        raise WebSocketException("Invalid user")
+    return user
+
+
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    # Accept the WebSocket connection
-    await connect(websocket)
+async def websocket_endpoint(websocket: WebSocket, user: User = Depends(get_user_from_cookie)):
+    await connect(websocket, user)
     try:
         while True:
             # Wait for a message from the client

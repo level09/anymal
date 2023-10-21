@@ -35,7 +35,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
             request: Optional[Request] = None,
             response: Optional[Response] = None,
     ) -> None:
-
         logger.info(f"User {user.id} has logged in.")
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
@@ -56,21 +55,9 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
     yield UserManager(user_db)
 
 
-class CookieRedirectTransport(CookieTransport):
-    """Custom cookie transport thar redirects the user after a successful login."""
-
-    async def get_login_response(self, token: str) -> Response:
-        """Redirect the user on successful login."""
-
-        # response = Response(settings.frontend_base_url + '/dashboard')
-        response = Response(status_code=status.HTTP_204_NO_CONTENT)
-        # response.headers['redirect'] = 1
-        return self._set_login_cookie(response, token)
-
-
-cookie_transport = CookieTransport(cookie_name='anymal',
-    cookie_secure=settings.secure_cookies,
-)
+cookie_transport = CookieTransport(cookie_name=settings.auth_cookie_name,
+                                   cookie_secure=settings.secure_cookies,
+                                   )
 
 
 def get_database_strategy(

@@ -2,7 +2,6 @@ import stripe
 from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.responses import RedirectResponse
 
 from .config import settings
 from .db import get_async_session, User

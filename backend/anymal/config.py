@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     stripe_publishable_key: SecretStr
     stripe_secret_key: SecretStr
     webhook_secret: str
+    auth_cookie_name: str = 'anymal'
 
     class Config:
         env_file = '.env'
