@@ -10,8 +10,10 @@ from anymal.users import fastapi_users, google_oauth_client, AccessTokenDatabase
 from anymal.websocket_manager import connect, disconnect, broadcast
 
 # from anymal.routers import user  # Uncomment when you want to use the user router
+# import pdb
+# pdb.set_trace()
+app = FastAPI(docs_url=settings.docs_url, redoc_url=settings.redoc_url, debug=settings.debug)
 
-app = FastAPI()
 
 # Add CORS middleware with more restrictive origins for production
 ALLOWED_ORIGINS = ["http://localhost:3000",  # Vue app

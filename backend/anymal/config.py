@@ -1,4 +1,6 @@
 import logging
+from typing import Optional
+
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 
@@ -27,6 +29,7 @@ class Settings(BaseSettings):
     secret_key: SecretStr
     hashing_algorithm: str = "HS256"
     access_token_expire_days: int = 7
+    debug: bool = False
 
     secure_cookies: bool = True
     google_oauth_client_id: str
@@ -39,6 +42,8 @@ class Settings(BaseSettings):
     stripe_secret_key: SecretStr
     webhook_secret: str
     auth_cookie_name: str = 'anymal'
+    docs_url: Optional[str] = '/docs' if not debug else None
+    redoc_url: Optional[str] = '/redoc' if not debug else None
 
     class Config:
         env_file = '.env'
